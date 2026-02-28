@@ -31,4 +31,4 @@ As a player, you can create your own application identifier at: https://develope
 
 ## Example
 
-<img width="1170" height="1067" alt="clanviewer" src="https://github.com/user-attachments/assets/8c3cc152-8cfb-43f6-8362-3a01f41b4d97" />
+![Screenshot](sample.png)
