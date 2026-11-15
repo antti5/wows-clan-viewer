@@ -1,11 +1,17 @@
-import { useEffect } from 'react';
-import { encyclopediaInfo, encyclopediaShips } from '../services/wgApi';
+import React, { useEffect } from 'react';
+import { encyclopediaVersion, encyclopediaShips } from '../services/wgApi';
+import { type EncyclopediaShips } from '../types';
 import useLocalState from './useLocalState';
 import Def from '../Def';
 
-const useEncyclopedia = (apiId, setStatus, setError) => {
+const useEncyclopedia = (
+   apiId: string,
+   setStatus: React.Dispatch<React.SetStateAction<number>>,
+   setError: React.Dispatch<string>
+): EncyclopediaShips | null => {
 
-   const [encyclopedia, setEncyclopedia] = useLocalState('encyclopedia', null);
+   const [version, setVersion] = useLocalState<string>('encyclopediaVersion', '');
+   const [ships, setShips] = useLocalState<EncyclopediaShips | null>('encyclopediaShips', null);
 
    /* Fetch ship encyclopedia from WG Public API on mount and whenever the API
    identifier changes.
@@ -19,32 +25,32 @@ const useEncyclopedia = (apiId, setStatus, setError) => {
          return;
       }
 
-      (async () => {
+      void (async () => {
          try {
-            const { gameVersion } = await encyclopediaInfo(apiId);
-            if (encyclopedia?.version === gameVersion) {
+            const newVersion = await encyclopediaVersion(apiId);
+            if (version === newVersion) {
                console.log('Encyclopedia is up to date');
                setStatus(old => old === Def.STATUS_LOADED ? old : Def.STATUS_NONE);
                return;
             }
 
+            const newShips = await encyclopediaShips(apiId);
+
             setStatus(Def.STATUS_INITIALIZING);
-            const newEncyclopedia = {
-               version: gameVersion,
-               ships: await encyclopediaShips(apiId)
-            };
-            setEncyclopedia(newEncyclopedia);
+            setVersion(newVersion);
+            setShips(newShips);
             setStatus(old => old === Def.STATUS_LOADED ? old : Def.STATUS_NONE);
 
          } catch (error) {
             console.error(error);
             setStatus(Def.STATUS_ERROR);
-            setError(error.message);
+            if (error instanceof Error)
+               setError(error.message);
          }
       })();
    }, [apiId]);
 
-   return encyclopedia;
+   return ships;
 };
 
 export default useEncyclopedia;

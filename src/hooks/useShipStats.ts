@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
+import type { ClanMember, EncyclopediaShips, ShipStats } from '../types';
 import useLocalState from './useLocalState';
 import { clansList, clansInfo, accountInfo, shipsStats } from '../services/wgApi';
 import Def from '../Def';
@@ -6,23 +7,23 @@ import Semaphore from '../Semaphore';
 
 const SUBS_INTRODUCTION = Date.parse('2023-01-01');
 
-const typeShareMinSub = createdAt =>
+const typeShareMinSub = (createdAt: number) =>
    Math.min((Date.now() - SUBS_INTRODUCTION) / (Date.now() - createdAt * 1000), 1) * Def.TYPE_SHARE_MIN;
 
 
 const useShipStats = (
-   apiId,
-   region,
-   clanTag,
-   encyclopedia,
-   setStatus,
-   setError,
-   setInputTag,
-   setClanName,
-   setClanMembers
+   apiId: string,
+   region: string,
+   clanTag: string,
+   encyclopedia: EncyclopediaShips | null,
+   setStatus: React.Dispatch<number>,
+   setError: React.Dispatch<string>,
+   setInputTag: React.Dispatch<string>,
+   setClanName: React.Dispatch<string>,
+   setClanMembers: React.Dispatch<ClanMember[]>
 ) => {
 
-   const [shipStats, setShipStats] = useLocalState('shipStats', {});
+   const [shipStats, setShipStats] = useLocalState<ShipStats>('shipStats', {});
 
    /* When the selected clan changes, load player information from WG Public API */
 
@@ -37,13 +38,13 @@ const useShipStats = (
 
       setStatus(Def.STATUS_NONE);
 
-      (async () => {
+      void (async () => {
          try {
             const { clanId, clanName } = await clansList(apiId, region, clanTag);
 
             setInputTag(''); // Clear input field when the first API call succeeds
             setClanName(clanName);
-            setClanMembers(null);
+            setClanMembers([]);
             setStatus(Def.STATUS_LOADED);
 
             const { memberIds, members } = await clansInfo(apiId, region, clanId);
@@ -55,15 +56,16 @@ const useShipStats = (
             );
 
             setClanMembers(membersInfo.map(m => ({
-               id:         m.account_id,
-               nickname:   m.nickname,
-               role:       Def.ROLES[members[m.account_id].role],
-               battles:    m.statistics?.pvp?.battles ?? null,
-               winRate:    m.statistics?.pvp?.battles > 0 ? m.statistics.pvp?.wins / m.statistics.pvp?.battles : null,
-               divShare:   m.statistics?.pvp?.battles > 0 ? (m.statistics.pvp?.battles - m.statistics.pvp_solo?.battles) / m.statistics.pvp?.battles : null,
-               membership: Math.floor((Date.now() - members[m.account_id].joined_at * 1000) / Def.DAY_MS),
-               inactive:   Math.floor((Date.now() - m.last_battle_time * 1000) / Def.DAY_MS),
-               created:    new Date(m.created_at * 1000).toISOString().slice(0,10)
+               foo:          members[m.account_id].role,
+               id:           m.account_id,
+               nickname:     m.nickname,
+               createdDate:  new Date(m.created_at * 1000).toISOString().slice(0,10),
+               role:         members[m.account_id].role,
+               memberDays:   Math.floor((Date.now() - members[m.account_id].joined_at * 1000) / Def.DAY_MS),
+               inactiveDays: Math.floor((Date.now() - m.last_battle_time * 1000) / Def.DAY_MS),
+               battles:      m.statistics?.pvp?.battles,
+               winRate:      m.statistics?.pvp?.battles ? m.statistics.pvp?.wins / m.statistics.pvp?.battles : undefined,
+               divShare:     m.statistics?.pvp?.battles ? (m.statistics.pvp?.battles - (m.statistics.pvp_solo?.battles ?? 0)) / m.statistics.pvp?.battles : undefined
             })));
 
             /* Fetch clan members' ship statistics so that favorite ship types and average
@@ -81,7 +83,7 @@ const useShipStats = (
                if (shipStats[account_id]?.ts * 1000 > Date.now() - Def.CACHE_SHIP_STATS_DAYS * Def.DAY_MS)
                   continue;
 
-               sem.run(async () => {
+               void sem.run(async () => {
                   console.info('Loading ship stats for', nickname);
                   const memberShipStats = await shipsStats(apiId, region, account_id);
 
@@ -97,19 +99,26 @@ const useShipStats = (
                      D: 0,
                      S: 0
                   };
-                  for (const stats of memberShipStats)
-                     if (stats.pvp?.battles > 0 && stats.ship_id in encyclopedia.ships) {
+
+                  for (const stats of memberShipStats) {
+                     if (stats.ship_id in encyclopedia === false)
+                        continue;
+                     if (stats.pvp?.battles) {
+                        const shipType = encyclopedia[stats.ship_id].index.slice(3,4);
+                        battlesByType[shipType as keyof typeof battlesByType] += stats.pvp.battles;
                         battlesTotal += stats.pvp.battles;
-                        tierTotal += encyclopedia.ships[stats.ship_id].tier * stats.pvp.battles;
-                        battlesByType[encyclopedia.ships[stats.ship_id].index.slice(3,4)] += stats.pvp.battles;
+                        tierTotal += encyclopedia[stats.ship_id].tier * stats.pvp.battles;
                      }
+                  }
 
                   const avgTier = (tierTotal / battlesTotal).toFixed(1);
 
                   const types = Object.entries(battlesByType)
                      .map(([type, battles]) => [type, battles / battlesTotal])
-                     .sort(([, battles1], [, battles2]) => battles2 - battles1)
-                     .filter(([type, battles]) => battles > (type === 'S' ? typeShareMinSub(created_at) : Def.TYPE_SHARE_MIN))
+                     /* Note: After map() TypeScript is no longer convinced that the object values are still number,
+                     so type assertions are needed. This kind of a tight loop probably has no place in TypeScript. */
+                     .sort(([, battles1], [, battles2]) => (battles2 as number) - (battles1 as number))
+                     .filter(([type, battles]) => (battles as number) > (type === 'S' ? typeShareMinSub(created_at) : Def.TYPE_SHARE_MIN))
                      .map(([type]) => type)
                      .join('');
 
@@ -130,24 +139,27 @@ const useShipStats = (
             However, never discard entries that are currently shown. */
 
             await sem.wait();
+
             setShipStats(old => {
                const entries = Object.entries(old);
                const shown = entries.filter(([ key ]) => key in members);
+
                if (entries.length > Def.CACHE_SHIP_STATS_NUMBER * 1.5) {
                   console.log(`Cleaning ${entries.length - Def.CACHE_SHIP_STATS_NUMBER} oldest ship stats`);
+                  entries.sort(([, { ts: ts1 }], [, { ts: ts2 }]) => ts1 - ts2);
                   return Object.fromEntries([
-                     ...entries
-                        .toSorted(([, { ts: ts1 }], [, { ts: ts2 }]) => ts1 - ts2)
-                        .slice(-Def.CACHE_SHIP_STATS_NUMBER),
+                     ...entries.slice(-Def.CACHE_SHIP_STATS_NUMBER),
                      ...shown
                   ]);
                } else
                   return old;
             });
+
          } catch (error) {
             console.error(error);
             setStatus(Def.STATUS_ERROR);
-            setError(error.message);
+            if (error instanceof Error)
+               setError(error.message);
          }
       })();
    }, [clanTag, encyclopedia]);

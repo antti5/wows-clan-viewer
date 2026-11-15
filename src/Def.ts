@@ -31,11 +31,6 @@ export default {
       S: 'SS'
    },
 
-   WOWS_NUMBERS_PREFIX: {
-      com: 'na.',
-      asia: 'asia.'
-   },
-
    /* Share of player's total battles for a ship type to be listed */
    TYPE_SHARE_MIN: 0.1
 };

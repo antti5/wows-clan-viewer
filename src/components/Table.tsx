@@ -1,14 +1,32 @@
 import clsx from 'clsx';
 import Def from '../Def';
+import type { ClanMember, ShipStats } from '../types';
 
-const average = a => {
-   const aNumber = a.filter(x => typeof x === 'number' && !isNaN(x));
-   return aNumber.length > 0 ?
-      aNumber.reduce((sum, value) => sum + value) / aNumber.length :
-      null;
+const average = (values: (number | undefined)[]) => {
+   const numbers = values
+      .filter(n => typeof n === 'number')
+      .filter(n => !isNaN(n));
+   return numbers.length > 0 ?
+      numbers.reduce((sum, value) => sum + value) / numbers.length :
+      0;
 };
 
-const Table = ({ region, clanMembers, shipStats }) =>
+const wowsNumberPrefix = (region: string) => {
+   if (region === 'asia')
+      return 'asia.';
+   else if (region === 'com')
+      return 'na.';
+   else
+      return '';
+};
+
+interface TableProps {
+   region: string,
+   clanMembers: ClanMember[],
+   shipStats: ShipStats
+}
+
+const Table = ({ region, clanMembers, shipStats }: TableProps) =>
    <table>
       <thead>
          <tr>
@@ -33,12 +51,18 @@ const Table = ({ region, clanMembers, shipStats }) =>
                   {i + 1}
                </td>
                <td>
-                  <span title='Show on wows-numbers' className='player' onClick={() => window.open(`https://${Def.WOWS_NUMBERS_PREFIX[region] ?? ''}wows-numbers.com/player/${m.id},${m.nickname}`, '_blank')}>
+                  <span
+                     title='Show on wows-numbers'
+                     className='player'
+                     onClick={() => {
+                        window.open(`https://${wowsNumberPrefix(region)}wows-numbers.com/player/${m.id},${m.nickname}`, '_blank');
+                     }}
+                  >
                      {m.nickname}
                   </span>
                </td>
                <td className={'role' + (Object.values(Def.ROLES).indexOf(m.role) + 1)}>
-                  {m.role}
+                  {Def.ROLES[m.role as keyof typeof Def.ROLES] ?? ''}
                </td>
                <td>
                   {m.battles}
@@ -67,24 +91,24 @@ const Table = ({ region, clanMembers, shipStats }) =>
                            key={type}
                            className={clsx(
                               'type',
-                              Def.TYPES[type]
+                              type
                            )}
                         >
-                           {Def.TYPES[type]}
+                           {Def.TYPES[type as keyof typeof Def.TYPES]}
                         </span>
                      )}
                   </>}
                </td>
                <td>
-                  {m.membership}
+                  {m.memberDays}
                   <small>d</small>
                </td>
                <td>
-                  {m.inactive}
+                  {m.inactiveDays}
                   <small>d</small>
                </td>
                <td>
-                  {m.created}
+                  {m.createdDate}
                </td>
             </tr>
          )}

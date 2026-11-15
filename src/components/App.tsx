@@ -7,17 +7,18 @@ import Def from '../Def';
 import Table from './Table';
 import useEncyclopedia from '../hooks/useEncyclopedia';
 import useShipStats from '../hooks/useShipStats';
+import { type ClanMember } from '../types';
 
 
 const App = () => {
 
    const [status, setStatus] = useState(Def.STATUS_NONE);
-   const [error, setError] = useState();
+   const [error, setError] = useState('');
    const [apiId, setApiId] = useLocalState('apiId', '');
    const [clanTag, setClanTag] = useQueryState('c', parseAsString.withDefault(''));
    const [region, setRegion] = useQueryState('r', parseAsString.withDefault('eu'));
-   const [clanName, setClanName] = useState();
-   const [clanMembers, setClanMembers] = useState();
+   const [clanName, setClanName] = useState('');
+   const [clanMembers, setClanMembers] = useState<ClanMember[]>([]);
    const [inputTag, setInputTag] = useState('');
 
    const encyclopedia = useEncyclopedia(
@@ -43,9 +44,9 @@ const App = () => {
          <NavigationBar
             inputTag={inputTag}
             setInputTag={setInputTag}
-            setClanTag={setClanTag}
+            setClanTag={tag => void setClanTag(tag)}
             region={region}
-            setRegion={setRegion}
+            setRegion={region => void setRegion(region)}
             apiId={apiId}
             setApiId={setApiId}
          />

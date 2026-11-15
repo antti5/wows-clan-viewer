@@ -1,0 +1,39 @@
+{
+   "compilerOptions": {
+      "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+      "target": "ES2022",
+      "useDefineForClassFields": true,
+      "lib": [
+         "ES2022",
+         "DOM",
+         "DOM.Iterable"
+      ],
+      "module": "esnext",
+      "types": ["vite/client"],
+      "skipLibCheck": true,
+
+      /* Bundler mode */
+      "moduleResolution": "bundler",
+      "allowImportingTsExtensions": true,
+      "verbatimModuleSyntax": true,
+      "moduleDetection": "force",
+      "noEmit": true,
+      "jsx": "react-jsx",
+
+      /* Linting */
+      "strict": true,
+      "esModuleInterop": true,
+      "noFallthroughCasesInSwitch": true,
+      "noImplicitReturns": true,
+      "noUncheckedSideEffectImports": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+
+      /* Mahdollistaa JSON-tiedoston importin, samaan tyyliin kuin normi-Javascriptissä
+      voitaisiin tehdä import-attribuutilla:
+
+      import './foo.json' with { type: 'json '} */
+      "resolveJsonModule": true
+   },
+   "include": ["src"]
+}

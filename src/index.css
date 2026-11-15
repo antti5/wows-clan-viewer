@@ -230,8 +230,8 @@ main {
                   &:not(:first-child) {
                      margin-left: 0.2em;
                   }
-                  &.CV,
-                  &.SS {
+                  &.A,
+                  &.S {
                      color: #78b;
                   }
                }

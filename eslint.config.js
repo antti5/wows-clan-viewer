@@ -3,12 +3,13 @@ import js from '@eslint/js';
 import css from '@eslint/css';
 import globals from 'globals';
 import react from 'eslint-plugin-react';
+import tseslint from 'typescript-eslint';
 //import reactHooks from 'eslint-plugin-react-hooks';
 
 
 export default defineConfig([
    {
-      files: ['**/*.{js,jsx,mjs,cjs}'],
+      files: ['**/*.{js,jsx,ts,tsx,mjs,cjs}'],
       plugins: { js },
       extends: ['js/recommended'],
       languageOptions: {
@@ -42,6 +43,24 @@ export default defineConfig([
          'object-curly-spacing': ['error', 'always'],
          'no-constant-condition': ['warn', {
             checkLoops: false
+         }]
+      }
+   },
+
+   {
+      files: ['**/*.{ts,tsx}'],
+      extends: [
+         ...tseslint.configs.recommendedTypeChecked,
+      ],
+      languageOptions: {
+         parserOptions: {
+            projectService: true,
+            tsconfigRootDir: import.meta.dirname,
+         },
+      },
+      rules: {
+         '@typescript-eslint/no-unused-vars': ['warn', {
+            argsIgnorePattern: '^_',
          }]
       }
    },

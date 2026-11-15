@@ -1,6 +1,7 @@
 import { Fragment } from 'react/jsx-runtime';
 import Def from '../Def';
 import clsx from 'clsx';
+import type React from 'react';
 
 const RADIO_LABEL = {
    eu: 'EU',
@@ -8,7 +9,26 @@ const RADIO_LABEL = {
    asia: 'Asia'
 };
 
-const NavigationBar = ({ inputTag, setInputTag, setClanTag, region, setRegion, apiId, setApiId }) => <>
+interface NavigationBarProps {
+   inputTag: string,
+   setInputTag: React.Dispatch<string>,
+   setClanTag: React.Dispatch<string>,
+   region: string,
+   setRegion: React.Dispatch<string>,
+   apiId: string,
+   setApiId: React.Dispatch<string>
+}
+
+const NavigationBar = ({
+   inputTag,
+   setInputTag,
+   setClanTag,
+   region,
+   setRegion,
+   apiId,
+   setApiId
+}: NavigationBarProps) => <>
+
    <form onSubmit={event => {
       event.preventDefault();
       if (inputTag.length === 0) {
@@ -23,7 +43,7 @@ const NavigationBar = ({ inputTag, setInputTag, setClanTag, region, setRegion, a
          <input
             type='text'
             name='tag'
-            maxLength='5'
+            maxLength={5}
             value={inputTag}
             onChange={event => setInputTag(event.target.value)}
          />
@@ -31,7 +51,7 @@ const NavigationBar = ({ inputTag, setInputTag, setClanTag, region, setRegion, a
 
       <div className='inputContainer region'>
          Region:
-         {['eu', 'com', 'asia'].map(r =>
+         {(Object.keys(RADIO_LABEL) as Array<keyof typeof RADIO_LABEL>).map(r =>
             <Fragment key={r}>
                <input
                   type='radio'
@@ -56,7 +76,7 @@ const NavigationBar = ({ inputTag, setInputTag, setClanTag, region, setRegion, a
             )}
             type='text'
             name='apiId'
-            maxLength='32'
+            maxLength={32}
             value={apiId}
             onChange={event => setApiId(event.target.value)}
          />
