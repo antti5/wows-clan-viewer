@@ -40,15 +40,15 @@ const useShipStats = (
 
       void (async () => {
          try {
-            const { clanId, clanName } = await clansList(apiId, region, clanTag);
+            const { clan_id, name } = await clansList(apiId, region, clanTag);
 
             setInputTag(''); // Clear input field when the first API call succeeds
-            setClanName(clanName);
+            setClanName(name);
             setClanMembers([]);
             setStatus(Def.STATUS_LOADED);
 
-            const { memberIds, members } = await clansInfo(apiId, region, clanId);
-            const membersInfo = await accountInfo(apiId, region, memberIds);
+            const { members_ids, members } = await clansInfo(apiId, region, clan_id);
+            const membersInfo = await accountInfo(apiId, region, members_ids);
 
             membersInfo.sort((m1, m2) =>
                Object.keys(Def.ROLES).indexOf(members[m1.account_id].role) - Object.keys(Def.ROLES).indexOf(members[m2.account_id].role) ||
@@ -56,7 +56,6 @@ const useShipStats = (
             );
 
             setClanMembers(membersInfo.map(m => ({
-               foo:          members[m.account_id].role,
                id:           m.account_id,
                nickname:     m.nickname,
                createdDate:  new Date(m.created_at * 1000).toISOString().slice(0,10),
@@ -74,7 +73,7 @@ const useShipStats = (
             Note: This phase requires a separate API call for each clan member. The results are cached
             in Local Storage for CACHE_SHIP_STATS_DAYS days. */
 
-            const sem = new Semaphore(5);
+            const sem = new Semaphore(5, { rateLimit: 10 });
 
             for (const { account_id, nickname, created_at, statistics } of membersInfo) {
                if (!statistics || statistics.pvp?.battles === 0)

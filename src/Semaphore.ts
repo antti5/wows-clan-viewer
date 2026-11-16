@@ -14,13 +14,13 @@ class Semaphore {
    #max;
    #queue: QueueItem[] = [];
 
-   #rateLimit: number | null = null;
+   #rateLimit: number = 0;
    #rateLimitInterval: number | null = null;
 
    #waiters: Waiter[] = [];
 
 
-   constructor(max = 1, { rateLimit = null } = {}) {
+   constructor(max = 1, { rateLimit = 0 }: { rateLimit?: number } = {}) {
       this.#max = max;
       this.#rateLimit = rateLimit;
    }
@@ -34,7 +34,7 @@ class Semaphore {
       acquisition will be timed. */
 
       if (this.#value < this.#max && !this.#rateLimitInterval) {
-         if (this.#rateLimit)
+         if (this.#rateLimit > 0)
             this.#rateLimitInterval = setInterval(
                () => this.#resolveNext(),
                1000 / this.#rateLimit

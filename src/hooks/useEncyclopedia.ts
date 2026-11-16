@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { encyclopediaVersion, encyclopediaShips } from '../services/wgApi';
+import { encyclopediaInfo, encyclopediaShips } from '../services/wgApi';
 import { type EncyclopediaShips } from '../types';
 import useLocalState from './useLocalState';
 import Def from '../Def';
@@ -27,7 +27,7 @@ const useEncyclopedia = (
 
       void (async () => {
          try {
-            const newVersion = await encyclopediaVersion(apiId);
+            const { game_version: newVersion } = await encyclopediaInfo(apiId);
             if (version === newVersion) {
                console.log('Encyclopedia is up to date');
                setStatus(old => old === Def.STATUS_LOADED ? old : Def.STATUS_NONE);
