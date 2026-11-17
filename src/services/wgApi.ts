@@ -3,27 +3,28 @@ import { type EncyclopediaShips } from '../types';
 import z from 'zod';
 
 
+/* Helper function to call any of the API endpoints */
+
 const WgResponseSchema = z.object({
    status: z.string(),
 
-   /* Error is present when status is not "ok" */
+   // Error is present when status is not "ok"
 
    error: z.optional(z.object({
       message: z.string()
    })),
 
-   /* Meta is present when status is "ok" */
+   // Meta is present when status is "ok"
 
    meta: z.optional(z.object({
       page_total: z.number().optional()
    })),
 
-   /* Depending on the response, data is either an object or an array of objects.
-   In either case, the value is parsed with another schema. */
+   // Depending on the response, data is either an object or an array of objects.
+   // In either case, the value is parsed with another schema.
 
    data: z.union([z.looseObject({}), z.array(z.unknown())])
 });
-
 
 const callApi = async (url: string) => {
    const data = await (await fetch(url)).json() as unknown;
@@ -31,9 +32,12 @@ const callApi = async (url: string) => {
 
    if (response.status !== 'ok')
       throw new Error(`Wargaming API error: ${response?.error?.message}`);
+
    return response;
 };
 
+
+/* /encyclopedia/info -- Contains current game version */
 
 const EncyclopediaInfoSchema = z.object({
    game_version: z.string()
@@ -44,6 +48,8 @@ export const encyclopediaInfo = async (apiId: string) => {
    return EncyclopediaInfoSchema.parse(data);
 };
 
+
+/* /encyclopedia/ships -- List of ships in the current game version */
 
 const EncyclopediaShipsSchema = z.record(
    z.number(),
@@ -83,6 +89,8 @@ export const encyclopediaShips = async (apiId: string) => {
 };
 
 
+/* /clans/list -- Clans whose tags match the given string */
+
 const ClansListSchema = z.array(
    z.object({
       clan_id: z.number(),
@@ -102,6 +110,8 @@ export const clansList = async (apiId: string, region: string, clanTag: string) 
    return clanInfo;
 };
 
+
+/* /clans/info -- Information about the given clan, including a list of members */
 
 const ClansInfoSchema = z.record(
    z.number(),
@@ -132,6 +142,8 @@ export const clansInfo = async (apiId: string, region: string, clanId: number) =
 };
 
 
+/* /account/info -- Information about given players */
+
 const AccountInfoSchema = z.record(
    z.number(),
    z.object({
@@ -157,6 +169,8 @@ export const accountInfo = async (apiId: string, region: string, accountIds: num
    return Object.values(response);
 };
 
+
+/* /ships/stats -- Given players' stats in different ships */
 
 const ShipsStatsSchema = z.record(
    z.number(),
