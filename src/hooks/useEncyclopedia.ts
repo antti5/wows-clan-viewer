@@ -1,14 +1,15 @@
 import React, { useEffect } from 'react';
-import { encyclopediaInfo, encyclopediaShips } from '../services/wgApi';
-import { type EncyclopediaShips } from '../types';
+import publicApi from '@antti5/ship-tool-common/publicApi';
 import useLocalState from './useLocalState';
+import type { EncyclopediaShips } from '../types';
 import Def from '../Def';
+
 
 const useEncyclopedia = (
    apiId: string,
    setStatus: React.Dispatch<React.SetStateAction<number>>,
    setError: React.Dispatch<string>
-): EncyclopediaShips | null => {
+) => {
 
    const [version, setVersion] = useLocalState<string>('encyclopediaVersion', '');
    const [ships, setShips] = useLocalState<EncyclopediaShips | null>('encyclopediaShips', null);
@@ -27,14 +28,14 @@ const useEncyclopedia = (
 
       void (async () => {
          try {
-            const { game_version: newVersion } = await encyclopediaInfo(apiId);
+            const { game_version: newVersion } = await publicApi.encyclopediaInfo(apiId);
             if (version === newVersion) {
                console.log('Encyclopedia is up to date');
                setStatus(old => old === Def.STATUS_LOADED ? old : Def.STATUS_NONE);
                return;
             }
 
-            const newShips = await encyclopediaShips(apiId);
+            const newShips = await publicApi.encyclopediaShips(apiId);
 
             setStatus(Def.STATUS_INITIALIZING);
             setVersion(newVersion);
@@ -48,9 +49,12 @@ const useEncyclopedia = (
                setError(error.message);
          }
       })();
+
+   // eslint-disable-next-line react-hooks/exhaustive-deps
    }, [apiId]);
 
    return ships;
 };
+
 
 export default useEncyclopedia;

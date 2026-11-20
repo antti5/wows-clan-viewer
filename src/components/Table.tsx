@@ -61,7 +61,7 @@ const Table = ({ region, clanMembers, shipStats }: TableProps) =>
                      {m.nickname}
                   </span>
                </td>
-               <td className={'role' + (Object.values(Def.ROLES).indexOf(m.role) + 1)}>
+               <td className={'role' + (Object.keys(Def.ROLES).indexOf(m.role) + 1)}>
                   {Def.ROLES[m.role as keyof typeof Def.ROLES] ?? ''}
                </td>
                <td>

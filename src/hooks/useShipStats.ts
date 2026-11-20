@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import type { ClanMember, EncyclopediaShips, ShipStats } from '../types';
 import useLocalState from './useLocalState';
-import { clansList, clansInfo, accountInfo, shipsStats } from '../services/wgApi';
 import Def from '../Def';
-import Semaphore from '../Semaphore';
+import publicApi from '@antti5/ship-tool-common/publicApi';
+import Semaphore from '@antti5/ship-tool-common/Semaphore';
+
 
 const SUBS_INTRODUCTION = Date.parse('2023-01-01');
 
@@ -40,15 +41,15 @@ const useShipStats = (
 
       void (async () => {
          try {
-            const { clan_id, name } = await clansList(apiId, region, clanTag);
+            const { clan_id, name } = await publicApi.clansList(apiId, region, clanTag);
 
             setInputTag(''); // Clear input field when the first API call succeeds
             setClanName(name);
             setClanMembers([]);
             setStatus(Def.STATUS_LOADED);
 
-            const { members_ids, members } = await clansInfo(apiId, region, clan_id);
-            const membersInfo = await accountInfo(apiId, region, members_ids);
+            const { members_ids, members } = await publicApi.clansInfoOne(apiId, region, clan_id);
+            const membersInfo = Object.values(await publicApi.accountInfoMany(apiId, region, members_ids));
 
             membersInfo.sort((m1, m2) =>
                Object.keys(Def.ROLES).indexOf(members[m1.account_id].role) - Object.keys(Def.ROLES).indexOf(members[m2.account_id].role) ||
@@ -84,7 +85,7 @@ const useShipStats = (
 
                void sem.run(async () => {
                   console.info('Loading ship stats for', nickname);
-                  const memberShipStats = await shipsStats(apiId, region, account_id);
+                  const memberShipStats = await publicApi.shipsStats(apiId, region, account_id);
 
                   if (!memberShipStats)
                      return;
@@ -103,7 +104,7 @@ const useShipStats = (
                      if (stats.ship_id in encyclopedia === false)
                         continue;
                      if (stats.pvp?.battles) {
-                        const shipType = encyclopedia[stats.ship_id].index.slice(3,4);
+                        const shipType = encyclopedia[stats.ship_id].ship_id_str.slice(3,4);
                         battlesByType[shipType as keyof typeof battlesByType] += stats.pvp.battles;
                         battlesTotal += stats.pvp.battles;
                         tierTotal += encyclopedia[stats.ship_id].tier * stats.pvp.battles;
@@ -161,7 +162,9 @@ const useShipStats = (
                setError(error.message);
          }
       })();
-   }, [clanTag, encyclopedia]);
+
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [apiId, region, clanTag, encyclopedia]);
 
    return shipStats;
 };

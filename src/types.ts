@@ -1,9 +1,9 @@
 export type EncyclopediaShips = Record<
-   number,
+   number, // Ship identifier
    {
-      id: number,
+      ship_id: number,
       tier: number,
-      index: string
+      ship_id_str: string
    }
 >;
 

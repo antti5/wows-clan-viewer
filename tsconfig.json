@@ -29,9 +29,7 @@
       "noUnusedLocals": true,
       "noUnusedParameters": true,
 
-      /* Mahdollistaa JSON-tiedoston importin, samaan tyyliin kuin normi-Javascriptissä
-      voitaisiin tehdä import-attribuutilla:
-
+      /* Allows JSON file import, like vanilla JavaScript would do with import attribute:
       import './foo.json' with { type: 'json '} */
       "resolveJsonModule": true
    },

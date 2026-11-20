@@ -4,7 +4,7 @@ import css from '@eslint/css';
 import globals from 'globals';
 import react from 'eslint-plugin-react';
 import tseslint from 'typescript-eslint';
-//import reactHooks from 'eslint-plugin-react-hooks';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 
 export default defineConfig([
@@ -92,12 +92,10 @@ export default defineConfig([
       }
    },
 
-   // TODO: Take in use
-   //
-   //{
-   //   files: ['**/*.{js,jsx}'],
-   //   ...reactHooks.configs.flat.recommended
-   //},
+   {
+      files: ['**/*.{js,jsx,ts,tsx}'],
+      ...reactHooks.configs.flat.recommended
+   },
 
    {
       files: ['**/*.css'],
