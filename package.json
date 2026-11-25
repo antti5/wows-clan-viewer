@@ -14,7 +14,7 @@
       "deploy": "gh-pages -d dist"
    },
    "dependencies": {
-      "@antti5/ship-tool-common": "1.1.2",
+      "@antti5/ship-tool-common": "1.1.6",
       "clsx": "2.1.1",
       "nuqs": "2.8.8",
       "zod": "4.6.7"
